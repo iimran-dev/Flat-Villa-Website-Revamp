@@ -35,6 +35,11 @@ export function Navbar() {
   const handleNavClick = (href: string) => {
     if (href === '#advisor') {
       toggleAdvisor();
+    } else if (href.startsWith('#')) {
+      const el = document.querySelector(href);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
     setMobileMenuOpen(false);
   };

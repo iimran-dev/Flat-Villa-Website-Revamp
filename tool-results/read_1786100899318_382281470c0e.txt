@@ -1,0 +1,924 @@
+     1→'use client';
+     2→
+     3→import { useState, useMemo, useEffect } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  ArrowLeft,
+     7→  Heart,
+     8→  Share2,
+     9→  Bot,
+    10→  Maximize2,
+    11→  MapPin,
+    12→  BedDouble,
+    13→  Bath,
+    14→  Calendar,
+    15→  Check,
+    16→  Plane,
+    17→  Wine,
+    18→  GraduationCap,
+    19→  Building2,
+    20→  Star,
+    21→  ShieldCheck,
+    22→  MessageSquare,
+    23→  Phone,
+    24→  PhoneCall,
+    25→  TrendingUp,
+    26→  Cpu,
+    27→  Dumbbell,
+    28→  Sparkles,
+    29→  Zap,
+    30→  Baby,
+    31→  Briefcase,
+    32→  ShoppingBag,
+    33→  Flower2,
+    34→  Activity,
+    35→  Waves,
+    36→  ChevronRight,
+    37→  ArrowUpRight,
+    38→  Clock,
+    39→  DollarSign,
+    40→  BarChart3,
+    41→} from 'lucide-react';
+    42→import {
+    43→  LineChart,
+    44→  Line,
+    45→  XAxis,
+    46→  YAxis,
+    47→  Tooltip as RechartsTooltip,
+    48→  ResponsiveContainer,
+    49→} from 'recharts';
+    50→import { PROPERTIES } from '@/lib/data';
+    51→import { useAppStore } from '@/lib/store';
+    52→
+    53→// ===== AMENITY ICON MAP =====
+    54→function getAmenityIcon(name: string) {
+    55→  const map: Record<string, React.ElementType> = {
+    56→    'Infinity Pool': Waves,
+    57→    'Smart Home': Cpu,
+    58→    'Private Beach': Waves,
+    59→    'Spa': Sparkles,
+    60→    'Gym': Dumbbell,
+    61→    'Concierge': Briefcase,
+    62→    'EV Charging': Zap,
+    63→    'Sky Garden': Flower2,
+    64→    'Clubhouse': Building2,
+    65→    'Kids Area': Baby,
+    66→    'Business Lounge': Briefcase,
+    67→    'Jogging Track': Activity,
+    68→    'Retail': ShoppingBag,
+    69→    'Private Pool': Waves,
+    70→    'Lagoon Access': Waves,
+    71→    'Marina': Waves,
+    72→    'Rooftop Lounge': Building2,
+    73→  };
+    74→  return map[name] || Check;
+    75→}
+    76→
+    77→// ===== NEARBY PLACE ICON MAP =====
+    78→function getNearbyIcon(type: string) {
+    79→  const map: Record<string, React.ElementType> = {
+    80→    transport: Plane,
+    81→    lifestyle: Wine,
+    82→    health: Heart,
+    83→    education: GraduationCap,
+    84→    business: Building2,
+    85→    city: Building2,
+    86→  };
+    87→  return map[type] || MapPin;
+    88→}
+    89→
+    90→// ===== RISK LEVEL COLORS =====
+    91→function getRiskColor(level: string) {
+    92→  switch (level) {
+    93→    case 'Low':
+    94→      return 'bg-emerald-100 text-emerald-700';
+    95→    case 'Medium':
+    96→      return 'bg-amber-100 text-amber-700';
+    97→    case 'High':
+    98→      return 'bg-red-100 text-red-700';
+    99→    default:
+   100→      return 'bg-gray-100 text-gray-700';
+   101→  }
+   102→}
+   103→
+   104→// ===== SCORE GAUGE COMPONENT =====
+   105→function ScoreGauge({
+   106→  score,
+   107→  size = 120,
+   108→  strokeWidth = 8,
+   109→}: {
+   110→  score: number;
+   111→  size?: number;
+   112→  strokeWidth?: number;
+   113→}) {
+   114→  const radius = (size - strokeWidth) / 2;
+   115→  const circumference = 2 * Math.PI * radius;
+   116→  const [offset, setOffset] = useState(circumference);
+   117→
+   118→  useEffect(() => {
+   119→    const timer = setTimeout(() => {
+   120→      setOffset(circumference * (1 - score / 100));
+   121→    }, 100);
+   122→    return () => clearTimeout(timer);
+   123→  }, [score, circumference]);
+   124→
+   125→  return (
+   126→    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+   127→      <svg width={size} height={size} className="-rotate-90">
+   128→        {/* Background circle */}
+   129→        <circle
+   130→          cx={size / 2}
+   131→          cy={size / 2}
+   132→          r={radius}
+   133→          fill="none"
+   134→          stroke="#E5E7EB"
+   135→          strokeWidth={strokeWidth}
+   136→        />
+   137→        {/* Score arc */}
+   138→        <motion.circle
+   139→          cx={size / 2}
+   140→          cy={size / 2}
+   141→          r={radius}
+   142→          fill="none"
+   143→          stroke="#D4AF37"
+   144→          strokeWidth={strokeWidth}
+   145→          strokeLinecap="round"
+   146→          strokeDasharray={circumference}
+   147→          initial={{ strokeDashoffset: circumference }}
+   148→          animate={{ strokeDashoffset: offset }}
+   149→          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+   150→        />
+   151→      </svg>
+   152→      {/* Center score */}
+   153→      <div className="absolute inset-0 flex flex-col items-center justify-center">
+   154→        <motion.span
+   155→          className="font-[family-name:var(--font-jakarta)] font-bold text-navy"
+   156→          style={{ fontSize: size * 0.28 }}
+   157→          initial={{ opacity: 0, scale: 0.8 }}
+   158→          animate={{ opacity: 1, scale: 1 }}
+   159→          transition={{ duration: 0.5, delay: 0.6 }}
+   160→        >
+   161→          {score}
+   162→        </motion.span>
+   163→        <span
+   164→          className="text-muted-foreground"
+   165→          style={{ fontSize: size * 0.1 }}
+   166→        >
+   167→          /100
+   168→        </span>
+   169→      </div>
+   170→    </div>
+   171→  );
+   172→}
+   173→
+   174→// ===== MOCK REVIEW DATA =====
+   175→const MOCK_REVIEWS = [
+   176→  {
+   177→    id: 'r1',
+   178→    rating: 5,
+   179→    text: 'Outstanding investment opportunity. The AI analysis was spot-on with the ROI projections. Already seeing 12% appreciation within the first year. The developer has an excellent track record and the location is prime.',
+   180→    name: 'Ahmed Al-Rashid',
+   181→    date: '2 months ago',
+   182→  },
+   183→  {
+   184→    id: 'r2',
+   185→    rating: 5,
+   186→    text: 'The entire buying process was seamless. From AI recommendation to property visit, everything was handled professionally. The rental yield projections are conservative — I\'m actually getting higher returns than expected.',
+   187→    name: 'Sarah Mitchell',
+   188→    date: '1 month ago',
+   189→  },
+   190→];
+   191→
+   192→// ===== PRICE PROJECTION DATA =====
+   193→function getPriceData(price: number) {
+   194→  return [
+   195→    { year: 'Year 1', value: Math.round(price) },
+   196→    { year: 'Year 2', value: Math.round(price * 1.12) },
+   197→    { year: 'Year 3', value: Math.round(price * 1.25) },
+   198→    { year: 'Year 4', value: Math.round(price * 1.40) },
+   199→    { year: 'Year 5', value: Math.round(price * 1.58) },
+   200→  ];
+   201→}
+   202→
+   203→// ===== CUSTOM TOOLTIP =====
+   204→function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
+   205→  if (active && payload && payload.length) {
+   206→    return (
+   207→      <div className="luxury-card px-4 py-3 rounded-xl shadow-lg">
+   208→        <p className="text-xs text-muted-foreground font-[family-name:var(--font-inter)]">{label}</p>
+   209→        <p className="text-sm font-bold text-navy font-[family-name:var(--font-jakarta)]">
+   210→          ${payload[0].value.toLocaleString()}
+   211→        </p>
+   212→      </div>
+   213→    );
+   214→  }
+   215→  return null;
+   216→}
+   217→
+   218→// ===== TAB TYPES =====
+   219→type TabKey = 'overview' | 'amenities' | 'investment' | 'location' | 'reviews';
+   220→
+   221→const TABS: { key: TabKey; label: string }[] = [
+   222→  { key: 'overview', label: 'Overview' },
+   223→  { key: 'amenities', label: 'Amenities' },
+   224→  { key: 'investment', label: 'Investment' },
+   225→  { key: 'location', label: 'Location' },
+   226→  { key: 'reviews', label: 'Reviews' },
+   227→];
+   228→
+   229→// ===== INNER DETAIL VIEW (keyed by property.id to reset state) =====
+   230→function PropertyDetailInner({
+   231→  property,
+   232→  onBack,
+   233→  onToggleAdvisor,
+   234→}: {
+   235→  property: NonNullable<ReturnType<typeof PROPERTIES['find']>>;
+   236→  onBack: () => void;
+   237→  onToggleAdvisor: () => void;
+   238→}) {
+   239→  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+   240→  const [galleryImages, setGalleryImages] = useState<string[]>(() => [...property.images]);
+   241→  const [liked, setLiked] = useState(false);
+   242→
+   243→  const priceData = getPriceData(property.price);
+   244→
+   245→  // Lock body scroll
+   246→  useEffect(() => {
+   247→    document.body.style.overflow = 'hidden';
+   248→    return () => {
+   249→      document.body.style.overflow = '';
+   250→    };
+   251→  }, []);
+   252→
+   253→  const handleSwapImage = (index: number) => {
+   254→    if (index === 0) return;
+   255→    setGalleryImages((prev) => {
+   256→      const next = [...prev];
+   257→      [next[0], next[index]] = [next[index], next[0]];
+   258→      return next;
+   259→    });
+   260→  };
+   261→
+   262→  return (
+   263→    <AnimatePresence>
+   264→      <motion.div
+   265→        className="fixed inset-0 z-40 bg-white overflow-y-auto scrollbar-luxury"
+   266→        initial={{ opacity: 0 }}
+   267→        animate={{ opacity: 1 }}
+   268→        exit={{ opacity: 0 }}
+   269→        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+   270→      >
+   271→        {/* ===== TOP BAR ===== */}
+   272→        <div className="fixed top-0 left-0 right-0 z-50 glass-navy h-16 flex items-center px-6">
+   273→          <button
+   274→            onClick={onBack}
+   275→            className="flex items-center gap-2 text-white/70 hover:text-[#D4AF37] transition-colors duration-300 shrink-0"
+   276→            aria-label="Go back"
+   277→          >
+   278→            <ArrowLeft className="h-5 w-5" />
+   279→            <span className="font-[family-name:var(--font-inter)] text-sm hidden sm:inline">Back</span>
+   280→          </button>
+   281→
+   282→          <h1 className="flex-1 text-center font-[family-name:var(--font-jakarta)] text-white text-sm md:text-base font-semibold truncate px-4">
+   283→            {property.name}
+   284→          </h1>
+   285→
+   286→          <div className="flex items-center gap-1 shrink-0">
+   287→            <button
+   288→              onClick={() => setLiked(!liked)}
+   289→              className={`p-2 rounded-full transition-colors duration-300 ${
+   290→                liked ? 'text-red-400' : 'text-white/70 hover:text-[#D4AF37]'
+   291→              }`}
+   292→              aria-label={liked ? 'Remove from favorites' : 'Add to favorites'}
+   293→            >
+   294→              <Heart className={`h-5 w-5 transition-transform duration-300 ${liked ? 'scale-110 fill-current' : ''}`} />
+   295→            </button>
+   296→            <button
+   297→              className="p-2 rounded-full text-white/70 hover:text-[#D4AF37] transition-colors duration-300"
+   298→              aria-label="Share property"
+   299→            >
+   300→              <Share2 className="h-5 w-5" />
+   301→            </button>
+   302→            <button
+   303→              onClick={onToggleAdvisor}
+   304→              className="p-2 rounded-full text-white/70 hover:text-[#D4AF37] transition-colors duration-300"
+   305→              aria-label="Open AI advisor"
+   306→            >
+   307→              <Bot className="h-5 w-5" />
+   308→            </button>
+   309→          </div>
+   310→        </div>
+   311→
+   312→        {/* ===== MAIN LAYOUT ===== */}
+   313→        <div className="flex flex-col lg:flex-row pt-16">
+   314→          {/* ===== LEFT CONTENT ===== */}
+   315→          <div className="flex-1 px-6 md:px-12 lg:px-20 py-8 pb-24 lg:pb-8">
+   316→            {/* ----- Image Gallery ----- */}
+   317→            <motion.div
+   318→              className="grid grid-cols-4 grid-rows-2 gap-3 h-[400px] md:h-[500px] rounded-3xl overflow-hidden"
+   319→              initial={{ opacity: 0, y: 20 }}
+   320→              animate={{ opacity: 1, y: 0 }}
+   321→              transition={{ duration: 0.6, delay: 0.1 }}
+   322→            >
+   323→              {galleryImages.map((img, idx) => (
+   324→                <div
+   325→                  key={`${img}-${idx}`}
+   326→                  className={`relative cursor-pointer overflow-hidden group ${
+   327→                    idx === 0 ? 'col-span-2 row-span-2' : ''
+   328→                  }`}
+   329→                  onClick={() => handleSwapImage(idx)}
+   330→                >
+   331→                  <img
+   332→                    src={img}
+   333→                    alt={`${property.name} photo ${idx + 1}`}
+   334→                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+   335→                  />
+   336→                  {/* Hover overlay */}
+   337→                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+   338→                    <Maximize2 className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+   339→                  </div>
+   340→                </div>
+   341→              ))}
+   342→            </motion.div>
+   343→
+   344→            {/* ----- Tabs ----- */}
+   345→            <motion.div
+   346→              className="mt-12 border-b border-border-light"
+   347→              initial={{ opacity: 0, y: 20 }}
+   348→              animate={{ opacity: 1, y: 0 }}
+   349→              transition={{ duration: 0.6, delay: 0.2 }}
+   350→            >
+   351→              <div className="flex gap-6 overflow-x-auto no-scrollbar">
+   352→                {TABS.map((tab) => (
+   353→                  <button
+   354→                    key={tab.key}
+   355→                    onClick={() => setActiveTab(tab.key)}
+   356→                    className={`relative font-[family-name:var(--font-inter)] text-sm whitespace-nowrap py-3 transition-colors duration-300 ${
+   357→                      activeTab === tab.key
+   358→                        ? 'text-navy font-semibold'
+   359→                        : 'text-muted-foreground hover:text-navy'
+   360→                    }`}
+   361→                  >
+   362→                    {tab.label}
+   363→                    {activeTab === tab.key && (
+   364→                      <motion.div
+   365→                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#D4AF37]"
+   366→                        layoutId="activeTab"
+   367→                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+   368→                      />
+   369→                    )}
+   370→                  </button>
+   371→                ))}
+   372→              </div>
+   373→            </motion.div>
+   374→
+   375→            {/* ----- Tab Content ----- */}
+   376→            <div className="mt-8">
+   377→              <AnimatePresence mode="wait">
+   378→                <motion.div
+   379→                  key={activeTab}
+   380→                  initial={{ opacity: 0, y: 12 }}
+   381→                  animate={{ opacity: 1, y: 0 }}
+   382→                  exit={{ opacity: 0, y: -12 }}
+   383→                  transition={{ duration: 0.3 }}
+   384→                >
+   385→                  {activeTab === 'overview' && <OverviewTab property={property} />}
+   386→                  {activeTab === 'amenities' && <AmenitiesTab property={property} />}
+   387→                  {activeTab === 'investment' && <InvestmentTab property={property} priceData={priceData} />}
+   388→                  {activeTab === 'location' && <LocationTab property={property} />}
+   389→                  {activeTab === 'reviews' && <ReviewsTab />}
+   390→                </motion.div>
+   391→              </AnimatePresence>
+   392→            </div>
+   393→          </div>
+   394→
+   395→          {/* ===== RIGHT SIDEBAR ===== */}
+   396→          <aside className="w-full lg:w-[400px] lg:min-w-[400px] border-l border-border-light px-6 py-8 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] overflow-y-auto scrollbar-luxury hidden lg:block">
+   397→            <SidebarContent property={property} toggleAdvisor={onToggleAdvisor} />
+   398→          </aside>
+   399→        </div>
+   400→
+   401→        {/* ===== MOBILE BOTTOM BAR ===== */}
+   402→        <div className="fixed bottom-0 left-0 right-0 lg:hidden glass-navy h-16 flex items-center justify-between px-6 z-50">
+   403→          <div className="flex-1 min-w-0 mr-4">
+   404→            <p className="text-sm text-white truncate font-[family-name:var(--font-inter)]">
+   405→              {property.name}
+   406→            </p>
+   407→            <p className="text-[#D4AF37] font-semibold font-[family-name:var(--font-jakarta)]">
+   408→              {property.priceLabel}
+   409→            </p>
+   410→          </div>
+   411→          <div className="flex items-center gap-2 shrink-0">
+   412→            <button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors duration-300">
+   413→              <Phone className="h-3.5 w-3.5" />
+   414→              <span className="hidden sm:inline">WhatsApp</span>
+   415→            </button>
+   416→            <button className="flex items-center gap-1.5 bg-[#D4AF37] hover:bg-[#e0be4a] text-[#0F172A] text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors duration-300 btn-luxury">
+   417→              <MessageSquare className="h-3.5 w-3.5" />
+   418→              <span>Enquire</span>
+   419→            </button>
+   420→          </div>
+   421→        </div>
+   422→      </motion.div>
+   423→    </AnimatePresence>
+   424→  );
+   425→}
+   426→
+   427→// ===== MAIN COMPONENT =====
+   428→export function PropertyDetail() {
+   429→  const selectedPropertyId = useAppStore((s) => s.selectedPropertyId);
+   430→  const selectProperty = useAppStore((s) => s.selectProperty);
+   431→  const toggleAdvisor = useAppStore((s) => s.toggleAdvisor);
+   432→
+   433→  const property = useMemo(
+   434→    () => PROPERTIES.find((p) => p.id === selectedPropertyId) ?? null,
+   435→    [selectedPropertyId]
+   436→  );
+   437→
+   438→  if (!selectedPropertyId || !property) return null;
+   439→
+   440→  return (
+   441→    <PropertyDetailInner
+   442→      key={property.id}
+   443→      property={property}
+   444→      onBack={() => selectProperty(null)}
+   445→      onToggleAdvisor={toggleAdvisor}
+   446→    />
+   447→  );
+   448→}
+   449→
+   450→// ===== OVERVIEW TAB =====
+   451→function OverviewTab({ property }: { property: NonNullable<ReturnType<typeof PROPERTIES['find']>> }) {
+   452→  return (
+   453→    <motion.div
+   454→      className="space-y-8"
+   455→      initial={{ opacity: 0 }}
+   456→      animate={{ opacity: 1 }}
+   457→      transition={{ duration: 0.5 }}
+   458→    >
+   459→      <div>
+   460→        <h2 className="text-3xl font-[family-name:var(--font-jakarta)] font-bold text-navy">
+   461→          {property.name}
+   462→        </h2>
+   463→        <div className="flex items-center gap-2 mt-3 text-muted-foreground">
+   464→          <MapPin className="h-4 w-4 text-[#D4AF37]" />
+   465→          <span className="font-[family-name:var(--font-inter)]">{property.location}</span>
+   466→        </div>
+   467→      </div>
+   468→
+   469→      <p className="text-navy/70 leading-relaxed font-[family-name:var(--font-inter)] text-base">
+   470→        {property.description}
+   471→      </p>
+   472→
+   473→      <div className="grid grid-cols-2 gap-4">
+   474→        {[
+   475→          { icon: BedDouble, label: 'Bedrooms', value: `${property.bedrooms} Bed${property.bedrooms > 1 ? 's' : ''}` },
+   476→          { icon: Bath, label: 'Bathrooms', value: `${property.bathrooms} Bath${property.bathrooms > 1 ? 's' : ''}` },
+   477→          { icon: Maximize2, label: 'Area', value: `${property.area} ${property.areaUnit}` },
+   478→          { icon: Calendar, label: 'Completion', value: property.completionDate },
+   479→        ].map((stat, i) => (
+   480→          <motion.div
+   481→            key={stat.label}
+   482→            className="luxury-card rounded-2xl p-5"
+   483→            initial={{ opacity: 0, y: 20 }}
+   484→            animate={{ opacity: 1, y: 0 }}
+   485→            transition={{ duration: 0.4, delay: i * 0.08 }}
+   486→          >
+   487→            <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center mb-3">
+   488→              <stat.icon className="h-5 w-5 text-[#D4AF37]" />
+   489→            </div>
+   490→            <p className="text-sm text-muted-foreground font-[family-name:var(--font-inter)]">{stat.label}</p>
+   491→            <p className="text-lg font-[family-name:var(--font-jakarta)] font-semibold text-navy mt-0.5">
+   492→              {stat.value}
+   493→            </p>
+   494→          </motion.div>
+   495→        ))}
+   496→      </div>
+   497→    </motion.div>
+   498→  );
+   499→}
+   500→
+   501→// ===== AMENITIES TAB =====
+   502→function AmenitiesTab({ property }: { property: NonNullable<ReturnType<typeof PROPERTIES['find']>> }) {
+   503→  return (
+   504→    <motion.div
+   505→      className="space-y-6"
+   506→      initial={{ opacity: 0 }}
+   507→      animate={{ opacity: 1 }}
+   508→      transition={{ duration: 0.5 }}
+   509→    >
+   510→      <h3 className="text-2xl font-[family-name:var(--font-jakarta)] font-bold text-navy">
+   511→        Premium Amenities
+   512→      </h3>
+   513→      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+   514→        {property.amenities.map((amenity, i) => {
+   515→          const IconComponent = getAmenityIcon(amenity);
+   516→          return (
+   517→            <motion.div
+   518→              key={amenity}
+   519→              className="luxury-card rounded-2xl p-4 flex items-center gap-3"
+   520→              initial={{ opacity: 0, y: 20 }}
+   521→              animate={{ opacity: 1, y: 0 }}
+   522→              transition={{ duration: 0.4, delay: i * 0.05 }}
+   523→            >
+   524→              <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+   525→                <IconComponent className="h-4.5 w-4.5 text-[#D4AF37]" />
+   526→              </div>
+   527→              <span className="text-sm font-medium text-navy font-[family-name:var(--font-inter)]">
+   528→                {amenity}
+   529→              </span>
+   530→            </motion.div>
+   531→          );
+   532→        })}
+   533→      </div>
+   534→    </motion.div>
+   535→  );
+   536→}
+   537→
+   538→// ===== INVESTMENT TAB =====
+   539→function InvestmentTab({
+   540→  property,
+   541→  priceData,
+   542→}: {
+   543→  property: NonNullable<ReturnType<typeof PROPERTIES['find']>>;
+   544→  priceData: Array<{ year: string; value: number }>;
+   545→}) {
+   546→  return (
+   547→    <motion.div
+   548→      className="space-y-10"
+   549→      initial={{ opacity: 0 }}
+   550→      animate={{ opacity: 1 }}
+   551→      transition={{ duration: 0.5 }}
+   552→    >
+   553→      {/* Score & Risk Section */}
+   554→      <div className="flex flex-col sm:flex-row items-center gap-8">
+   555→        <div className="flex flex-col items-center">
+   556→          <h3 className="text-2xl font-[family-name:var(--font-jakarta)] font-bold text-navy mb-4">
+   557→            Investment Score
+   558→          </h3>
+   559→          <ScoreGauge score={property.investmentScore} size={140} strokeWidth={10} />
+   560→        </div>
+   561→        <div className="flex-1 space-y-4 w-full">
+   562→          <div className="flex items-center justify-between">
+   563→            <span className="text-sm text-muted-foreground font-[family-name:var(--font-inter)]">Risk Level</span>
+   564→            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold ${getRiskColor(property.riskLevel)}`}>
+   565→              {property.riskLevel === 'Low' && <ShieldCheck className="h-3.5 w-3.5" />}
+   566→              {property.riskLevel === 'Medium' && <Clock className="h-3.5 w-3.5" />}
+   567→              {property.riskLevel === 'High' && <TrendingUp className="h-3.5 w-3.5" />}
+   568→              {property.riskLevel} Risk
+   569→            </span>
+   570→          </div>
+   571→          <div className="flex items-center justify-between">
+   572→            <span className="text-sm text-muted-foreground font-[family-name:var(--font-inter)]">Expected Appreciation</span>
+   573→            <span className="flex items-center gap-1 text-sm font-semibold text-emerald-600 font-[family-name:var(--font-jakarta)]">
+   574→              <ArrowUpRight className="h-4 w-4" />
+   575→              {property.appreciation}%
+   576→            </span>
+   577→          </div>
+   578→          <div className="flex items-center justify-between">
+   579→            <span className="text-sm text-muted-foreground font-[family-name:var(--font-inter)]">Demand Index</span>
+   580→            <div className="flex items-center gap-2">
+   581→              <div className="w-24 h-2 rounded-full bg-surface overflow-hidden">
+   582→                <motion.div
+   583→                  className="h-full rounded-full bg-[#D4AF37]"
+   584→                  initial={{ width: 0 }}
+   585→                  animate={{ width: `${property.demandIndex}%` }}
+   586→                  transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
+   587→                />
+   588→              </div>
+   589→              <span className="text-sm font-semibold text-navy font-[family-name:var(--font-jakarta)]">
+   590→                {property.demandIndex}%
+   591→              </span>
+   592→            </div>
+   593→          </div>
+   594→        </div>
+   595→      </div>
+   596→
+   597→      {/* Price Projection Chart */}
+   598→      <div>
+   599→        <h3 className="text-xl font-[family-name:var(--font-jakarta)] font-bold text-navy mb-6">
+   600→          5-Year Price Projection
+   601→        </h3>
+   602→        <div className="luxury-card rounded-2xl p-6">
+   603→          <div className="h-64">
+   604→            <ResponsiveContainer width="100%" height="100%">
+   605→              <LineChart data={priceData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+   606→                <XAxis
+   607→                  dataKey="year"
+   608→                  axisLine={false}
+   609→                  tickLine={false}
+   610→                  tick={{
+   611→                    fontSize: 12,
+   612→                    fontFamily: 'var(--font-inter)',
+   613→                    fill: '#64748B',
+   614→                  }}
+   615→                />
+   616→                <YAxis
+   617→                  axisLine={false}
+   618→                  tickLine={false}
+   619→                  tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`}
+   620→                  tick={{
+   621→                    fontSize: 12,
+   622→                    fontFamily: 'var(--font-inter)',
+   623→                    fill: '#64748B',
+   624→                  }}
+   625→                  width={55}
+   626→                />
+   627→                <RechartsTooltip content={<CustomTooltip />} />
+   628→                <Line
+   629→                  type="monotone"
+   630→                  dataKey="value"
+   631→                  stroke="#D4AF37"
+   632→                  strokeWidth={2.5}
+   633→                  dot={{
+   634→                    fill: '#D4AF37',
+   635→                    r: 4,
+   636→                    strokeWidth: 2,
+   637→                    stroke: '#fff',
+   638→                  }}
+   639→                  activeDot={{
+   640→                    fill: '#D4AF37',
+   641→                    r: 6,
+   642→                    strokeWidth: 2,
+   643→                    stroke: '#fff',
+   644→                  }}
+   645→                />
+   646→              </LineChart>
+   647→            </ResponsiveContainer>
+   648→          </div>
+   649→        </div>
+   650→      </div>
+   651→
+   652→      {/* Metric Cards */}
+   653→      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+   654→        {[
+   655→          { label: 'Rental Yield', value: `${property.rentalYield}%`, icon: DollarSign, color: 'text-emerald-600' },
+   656→          { label: 'Expected ROI', value: `${property.expectedROI}%`, icon: TrendingUp, color: 'text-[#D4AF37]' },
+   657→          { label: 'Down Payment', value: `${property.downPayment}%`, icon: BarChart3, color: 'text-navy' },
+   658→        ].map((metric, i) => (
+   659→          <motion.div
+   660→            key={metric.label}
+   661→            className="luxury-card rounded-2xl p-5"
+   662→            initial={{ opacity: 0, y: 20 }}
+   663→            animate={{ opacity: 1, y: 0 }}
+   664→            transition={{ duration: 0.4, delay: i * 0.1 }}
+   665→          >
+   666→            <div className="flex items-center gap-3 mb-3">
+   667→              <div className={`w-10 h-10 rounded-xl bg-surface flex items-center justify-center`}>
+   668→                <metric.icon className={`h-5 w-5 ${metric.color}`} />
+   669→              </div>
+   670→              <span className="text-sm text-muted-foreground font-[family-name:var(--font-inter)]">{metric.label}</span>
+   671→            </div>
+   672→            <p className="text-2xl font-[family-name:var(--font-jakarta)] font-bold text-navy">
+   673→              {metric.value}
+   674→            </p>
+   675→          </motion.div>
+   676→        ))}
+   677→      </div>
+   678→    </motion.div>
+   679→  );
+   680→}
+   681→
+   682→// ===== LOCATION TAB =====
+   683→function LocationTab({ property }: { property: NonNullable<ReturnType<typeof PROPERTIES['find']>> }) {
+   684→  return (
+   685→    <motion.div
+   686→      className="space-y-6"
+   687→      initial={{ opacity: 0 }}
+   688→      animate={{ opacity: 1 }}
+   689→      transition={{ duration: 0.5 }}
+   690→    >
+   691→      <div className="text-center">
+   692→        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#D4AF37]/10 mb-4">
+   693→          <MapPin className="h-7 w-7 text-[#D4AF37]" />
+   694→        </div>
+   695→        <h3 className="text-2xl font-[family-name:var(--font-jakarta)] font-bold text-navy">
+   696→          Prime Location
+   697→        </h3>
+   698→        <p className="text-muted-foreground mt-2 font-[family-name:var(--font-inter)]">
+   699→          {property.location}
+   700→        </p>
+   701→      </div>
+   702→
+   703→      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   704→        {property.nearbyPlaces.map((place, i) => {
+   705→          const IconComponent = getNearbyIcon(place.type);
+   706→          return (
+   707→            <motion.div
+   708→              key={place.name}
+   709→              className="luxury-card rounded-2xl p-5 flex items-center gap-4"
+   710→              initial={{ opacity: 0, y: 20 }}
+   711→              animate={{ opacity: 1, y: 0 }}
+   712→              transition={{ duration: 0.4, delay: i * 0.08 }}
+   713→            >
+   714→              <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+   715→                <IconComponent className="h-6 w-6 text-[#D4AF37]" />
+   716→              </div>
+   717→              <div className="flex-1 min-w-0">
+   718→                <p className="font-[family-name:var(--font-jakarta)] font-semibold text-navy truncate">
+   719→                  {place.name}
+   720→                </p>
+   721→                <p className="text-sm text-muted-foreground font-[family-name:var(--font-inter)] capitalize">
+   722→                  {place.type}
+   723→                </p>
+   724→              </div>
+   725→              <div className="shrink-0 flex items-center gap-1">
+   726→                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+   727→                <span className="text-sm font-semibold text-[#D4AF37] font-[family-name:var(--font-jakarta)]">
+   728→                  {place.distance}
+   729→                </span>
+   730→              </div>
+   731→            </motion.div>
+   732→          );
+   733→        })}
+   734→      </div>
+   735→    </motion.div>
+   736→  );
+   737→}
+   738→
+   739→// ===== REVIEWS TAB =====
+   740→function ReviewsTab() {
+   741→  return (
+   742→    <motion.div
+   743→      className="space-y-6"
+   744→      initial={{ opacity: 0 }}
+   745→      animate={{ opacity: 1 }}
+   746→      transition={{ duration: 0.5 }}
+   747→    >
+   748→      <div className="text-center">
+   749→        <h3 className="text-2xl font-[family-name:var(--font-jakarta)] font-bold text-navy">
+   750→          Investor Reviews
+   751→        </h3>
+   752→        <p className="text-muted-foreground mt-2 font-[family-name:var(--font-inter)]">
+   753→          What verified investors are saying
+   754→        </p>
+   755→      </div>
+   756→
+   757→      <div className="space-y-4">
+   758→        {MOCK_REVIEWS.map((review, i) => (
+   759→          <motion.div
+   760→            key={review.id}
+   761→            className="luxury-card rounded-2xl p-6"
+   762→            initial={{ opacity: 0, y: 20 }}
+   763→            animate={{ opacity: 1, y: 0 }}
+   764→            transition={{ duration: 0.4, delay: i * 0.1 }}
+   765→          >
+   766→            {/* Stars */}
+   767→            <div className="flex items-center gap-1 mb-3">
+   768→              {Array.from({ length: 5 }).map((_, s) => (
+   769→                <Star
+   770→                  key={s}
+   771→                  className="h-4 w-4 text-[#D4AF37] fill-[#D4AF37]"
+   772→                />
+   773→              ))}
+   774→            </div>
+   775→            <p className="text-navy/80 leading-relaxed font-[family-name:var(--font-inter)] text-sm">
+   776→              &ldquo;{review.text}&rdquo;
+   777→            </p>
+   778→            <div className="mt-4 pt-4 border-t border-border-light flex items-center justify-between">
+   779→              <div className="flex items-center gap-3">
+   780→                <div className="w-9 h-9 rounded-full bg-[#D4AF37]/10 flex items-center justify-center">
+   781→                  <span className="text-sm font-bold text-[#D4AF37] font-[family-name:var(--font-jakarta)]">
+   782→                    {review.name.charAt(0)}
+   783→                  </span>
+   784→                </div>
+   785→                <div>
+   786→                  <p className="text-sm font-semibold text-navy font-[family-name:var(--font-jakarta)]">
+   787→                    {review.name}
+   788→                  </p>
+   789→                  <p className="text-xs text-muted-foreground font-[family-name:var(--font-inter)]">
+   790→                    {review.date}
+   791→                  </p>
+   792→                </div>
+   793→              </div>
+   794→              <div className="flex items-center gap-1 text-emerald-600">
+   795→                <ShieldCheck className="h-3.5 w-3.5" />
+   796→                <span className="text-xs font-medium">Verified</span>
+   797→              </div>
+   798→            </div>
+   799→          </motion.div>
+   800→        ))}
+   801→      </div>
+   802→    </motion.div>
+   803→  );
+   804→}
+   805→
+   806→// ===== SIDEBAR CONTENT (desktop) =====
+   807→function SidebarContent({
+   808→  property,
+   809→  toggleAdvisor,
+   810→}: {
+   811→  property: NonNullable<ReturnType<typeof PROPERTIES['find']>>;
+   812→  toggleAdvisor: () => void;
+   813→}) {
+   814→  return (
+   815→    <div className="space-y-8">
+   816→      {/* Price */}
+   817→      <div>
+   818→        <p className="text-3xl font-[family-name:var(--font-jakarta)] font-bold text-navy">
+   819→          {property.priceLabel}
+   820→        </p>
+   821→        <p className="text-sm text-muted-foreground mt-1 font-[family-name:var(--font-inter)]">
+   822→          Starting from
+   823→        </p>
+   824→        {property.badge && (
+   825→          <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold uppercase tracking-wider">
+   826→            <Sparkles className="h-3 w-3" />
+   827→            {property.badge}
+   828→          </span>
+   829→        )}
+   830→      </div>
+   831→
+   832→      {/* Divider */}
+   833→      <div className="h-px bg-border-light" />
+   834→
+   835→      {/* AI Investment Score */}
+   836→      <div className="flex flex-col items-center">
+   837→        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-4 font-[family-name:var(--font-inter)] font-medium">
+   838→          AI Investment Score
+   839→        </p>
+   840→        <ScoreGauge score={property.investmentScore} size={110} strokeWidth={8} />
+   841→        <p className="text-xs text-muted-foreground mt-3 font-[family-name:var(--font-inter)]">
+   842→          AI Score
+   843→        </p>
+   844→      </div>
+   845→
+   846→      {/* Divider */}
+   847→      <div className="h-px bg-border-light" />
+   848→
+   849→      {/* Key Metrics */}
+   850→      <div className="space-y-4">
+   851→        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-[family-name:var(--font-inter)] font-medium">
+   852→          Key Metrics
+   853→        </p>
+   854→        {[
+   855→          { label: 'Developer', value: property.developer },
+   856→          { label: 'Expected ROI', value: `${property.expectedROI}%`, gold: true },
+   857→          { label: 'Rental Yield', value: `${property.rentalYield}%` },
+   858→          { label: 'Risk Level', value: property.riskLevel, badge: true },
+   859→          { label: 'Completion', value: property.completionDate },
+   860→          { label: 'Down Payment', value: `${property.downPayment}%` },
+   861→          { label: 'Monthly EMI', value: `$${property.monthlyEMI.toLocaleString()}` },
+   862→          { label: 'AI Match', value: `${property.aiMatch}%`, gold: true },
+   863→        ].map((metric) => (
+   864→          <div key={metric.label} className="flex items-center justify-between">
+   865→            <span className="text-sm text-muted-foreground font-[family-name:var(--font-inter)]">
+   866→              {metric.label}
+   867→            </span>
+   868→            {metric.badge ? (
+   869→              <span
+   870→                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getRiskColor(metric.value as string)}`}
+   871→              >
+   872→                {metric.value as string}
+   873→              </span>
+   874→            ) : (
+   875→              <span
+   876→                className={`font-[family-name:var(--font-jakarta)] font-semibold text-sm ${
+   877→                  (metric as { gold?: boolean }).gold ? 'text-[#D4AF37]' : 'text-navy'
+   878→                }`}
+   879→              >
+   880→                {metric.value}
+   881→              </span>
+   882→            )}
+   883→          </div>
+   884→        ))}
+   885→      </div>
+   886→
+   887→      {/* Divider */}
+   888→      <div className="h-px bg-border-light" />
+   889→
+   890→      {/* CTA Buttons */}
+   891→      <div className="space-y-3">
+   892→        <button className="btn-luxury w-full flex items-center justify-center gap-2 bg-[#D4AF37] text-[#0F172A] font-[family-name:var(--font-inter)] font-semibold text-sm rounded-2xl py-3.5 transition-all duration-300">
+   893→          <MessageSquare className="h-4 w-4" />
+   894→          Enquire Now
+   895→        </button>
+   896→        <div className="grid grid-cols-2 gap-3">
+   897→          <button className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-[family-name:var(--font-inter)] font-medium text-sm rounded-2xl py-3 transition-colors duration-300">
+   898→            <Phone className="h-4 w-4" />
+   899→            WhatsApp
+   900→          </button>
+   901→          <button className="flex items-center justify-center gap-2 bg-navy hover:bg-navy-deep text-white font-[family-name:var(--font-inter)] font-medium text-sm rounded-2xl py-3 transition-colors duration-300">
+   902→            <PhoneCall className="h-4 w-4" />
+   903→            Call
+   904→          </button>
+   905→        </div>
+   906→        <button className="w-full flex items-center justify-center gap-2 border border-navy text-navy font-[family-name:var(--font-inter)] font-medium text-sm rounded-2xl py-3 hover:bg-navy hover:text-white transition-all duration-300">
+   907→          <Calendar className="h-4 w-4" />
+   908→          Schedule Visit
+   909→        </button>
+   910→      </div>
+   911→
+   912→      {/* Verified Badge */}
+   913→      {property.verified && (
+   914→        <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+   915→          <ShieldCheck className="h-5 w-5 text-emerald-600" />
+   916→          <span className="text-sm font-semibold text-emerald-700 font-[family-name:var(--font-inter)]">
+   917→            Verified Property
+   918→          </span>
+   919→        </div>
+   920→      )}
+   921→    </div>
+   922→  );
+   923→}
+   924→

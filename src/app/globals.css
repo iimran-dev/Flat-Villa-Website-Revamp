@@ -260,6 +260,11 @@
   .scrollbar-luxury::-webkit-scrollbar-thumb:hover {
     background: rgba(212, 175, 55, 0.5);
   }
+  /* Firefox scrollbar fallback */
+  .scrollbar-luxury {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
+  }
 
   /* Hide scrollbar but keep scroll */
   .no-scrollbar::-webkit-scrollbar {

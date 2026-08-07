@@ -153,7 +153,7 @@ export function WhyInvest() {
               key={h.title}
               variants={fadeUp}
               transition={{ duration: 0.6 }}
-              className="luxury-card group rounded-2xl p-6 bg-white/5 border-white/10 hover:border-gold/30 hover:bg-white/[0.08]"
+              className="group rounded-2xl p-6 bg-white/5 border border-white/10 hover:border-gold/30 hover:bg-white/[0.08] transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.05)]"
             >
               <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gold/10 text-gold transition-colors group-hover:bg-gold/20">
                 <h.icon className="h-5 w-5" />
