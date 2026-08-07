@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { ArrowRight, MapPin } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { getAssetPath } from '@/lib/utils';
 
 const fadeUp = {
   hidden: { y: 30, opacity: 0 },
@@ -166,7 +167,7 @@ export function AIProperties() {
             {/* Satellite Map Background */}
             <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-1000"
-              style={{ backgroundImage: 'url(/egypt_map.png)' }}
+              style={{ backgroundImage: `url(${getAssetPath('/egypt_map.png')})` }}
             />
             {/* Vignette Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />

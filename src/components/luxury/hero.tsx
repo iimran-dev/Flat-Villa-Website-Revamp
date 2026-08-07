@@ -13,6 +13,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { getAssetPath } from '@/lib/utils';
 
 const fadeUp = {
   hidden: { y: 30, opacity: 0 },
@@ -65,7 +66,7 @@ export function Hero() {
       <div
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105"
         style={{
-          backgroundImage: 'url(/hero_bg.png)',
+          backgroundImage: `url(${getAssetPath('/hero_bg.png')})`,
         }}
       >
         {/* Gradients to ensure text readability */}

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Phone, Building2, Apple } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { getAssetPath } from '@/lib/utils';
 
 export function AppCTA() {
   const { toggleAdvisor, setPage } = useAppStore();
@@ -12,7 +13,7 @@ export function AppCTA() {
       {/* Background Image with Dark Vignette Overlay */}
       <div
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40"
-        style={{ backgroundImage: 'url(/hero_bg.png)' }}
+        style={{ backgroundImage: `url(${getAssetPath('/hero_bg.png')})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-[#0B132B] via-[#0B132B]/90 to-[#0B132B]" />
       </div>
@@ -66,7 +67,7 @@ export function AppCTA() {
             {/* Soft Ambient Gold Backlight Glow */}
             <div className="absolute inset-0 bg-[#C89B2B]/20 rounded-full blur-2xl group-hover:bg-[#C89B2B]/35 transition-all duration-500" />
             <img
-              src="/phone_mockup.png?v=4"
+              src={getAssetPath('/phone_mockup.png')}
               alt="Flat & Villa Mobile App Mockup"
               loading="eager"
               className="relative z-10 w-52 sm:w-64 md:w-72 lg:w-[290px] h-auto max-h-[340px] sm:max-h-[380px] md:max-h-[420px] lg:max-h-[450px] object-contain drop-shadow-[0_25px_50px_rgba(0,0,0,0.85)] contrast-[1.04] saturate-[1.04] transition-transform duration-500 group-hover:scale-105"
@@ -86,7 +87,7 @@ export function AppCTA() {
             {/* Left Realistic QR Code Image Box */}
             <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white p-1.5 rounded-2xl shrink-0 flex items-center justify-center shadow-xl relative border border-white/30 group/qr hover:scale-105 transition-transform duration-300 overflow-hidden">
               <img
-                src="/qr_code.png"
+                src={getAssetPath('/qr_code.png')}
                 alt="Scan to download Flat & Villa App"
                 className="w-full h-full object-contain rounded-xl"
               />
