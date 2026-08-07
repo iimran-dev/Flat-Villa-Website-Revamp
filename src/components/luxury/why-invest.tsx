@@ -1,173 +1,351 @@
 'use client';
 
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { ShieldCheck, Globe, Zap, TrendingUp } from 'lucide-react';
-import { WHY_INVEST_POINTS } from '@/lib/data';
+import {
+  ArrowRight,
+  Heart,
+  Calculator,
+  GitCompare,
+  CreditCard,
+  TrendingUp,
+  Box,
+  Headphones,
+  Bed,
+  Maximize,
+} from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 const fadeUp = {
-  hidden: { y: 40, opacity: 0 },
+  hidden: { y: 30, opacity: 0 },
   visible: { y: 0, opacity: 1 },
 };
 
 const staggerContainer = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
   },
 };
 
-const HIGHLIGHTS = [
+const FEATURED_PROJECTS = [
   {
+    id: 'proj-1',
+    name: 'BLOOMFIELDS',
+    location: 'Mostakbal City',
+    startingPrice: 'EGP 5.8M',
+    bedrooms: '2-4',
+    area: '120-240m²',
+    badge: 'New Launch',
+    badgeStyle: 'bg-[#1E293B] text-white',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+  },
+  {
+    id: 'proj-2',
+    name: 'SALT.',
+    location: 'North Coast',
+    startingPrice: 'EGP 9.3M',
+    bedrooms: '3-5',
+    area: '160-300m²',
+    badge: 'Exclusive',
+    badgeStyle: 'bg-[#C89B2B] text-white',
+    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80',
+  },
+  {
+    id: 'proj-3',
+    name: 'IL BOSCO CITY',
+    location: 'New Capital',
+    startingPrice: 'EGP 7.9M',
+    bedrooms: '2-4',
+    area: '130-250m²',
+    badge: 'Limited Units',
+    badgeStyle: 'bg-[#334155] text-white',
+    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80',
+  },
+  {
+    id: 'proj-4',
+    name: 'WEST OAKS',
+    location: '6th of October',
+    startingPrice: 'EGP 9.2M',
+    bedrooms: '2-4',
+    area: '120-220m²',
+    badge: 'Best ROI',
+    badgeStyle: 'bg-emerald-500 text-white',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+  },
+];
+
+const PLATFORM_FEATURES = [
+  {
+    id: 'feat-calc',
+    icon: Calculator,
+    title: 'Investment Calculator',
+    subtitle: 'Calculate ROI & returns',
+    action: 'calculator',
+  },
+  {
+    id: 'feat-compare',
+    icon: GitCompare,
+    title: 'Compare Projects',
+    subtitle: 'Side by side comparison',
+    action: 'compare',
+  },
+  {
+    id: 'feat-payment',
+    icon: CreditCard,
+    title: 'Payment Plans',
+    subtitle: 'Flexible payment options',
+    action: 'plans',
+  },
+  {
+    id: 'feat-insights',
     icon: TrendingUp,
-    title: '22%+ Avg. Appreciation',
-    desc: 'Properties in the New Capital are appreciating faster than any other market in the MENA region.',
+    title: 'Market Insights',
+    subtitle: 'Real-time market trends',
+    action: 'insights',
   },
   {
-    icon: ShieldCheck,
-    title: 'Government-Backed Growth',
-    desc: '$58B in infrastructure investment creating guaranteed demand for premium properties.',
+    id: 'feat-vr',
+    icon: Box,
+    title: 'VR Tours',
+    subtitle: 'Immersive property tours',
+    action: 'vr',
   },
   {
-    icon: Globe,
-    title: '15M+ Annual Tourists',
-    desc: 'Record-breaking tourism driving unprecedented short-term rental yields and occupancy rates.',
-  },
-  {
-    icon: Zap,
-    title: 'AI-Verified Opportunities',
-    desc: 'Every listing scored by our AI engine analyzing 50+ data points for maximum confidence.',
+    id: 'feat-advisor',
+    icon: Headphones,
+    title: 'AI Property Advisor',
+    subtitle: '24/7 Smart assistance',
+    action: 'advisor',
   },
 ];
 
 export function WhyInvest() {
+  const [activeDot, setActiveDot] = useState(0);
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const headerRef = useRef<HTMLDivElement>(null);
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const highlightsRef = useRef<HTMLDivElement>(null);
+  const isHeaderInView = useInView(headerRef, { once: true, margin: '-40px' });
+  const { setPage, selectProperty, toggleAdvisor } = useAppStore();
 
-  const isHeaderInView = useInView(headerRef, { once: true, margin: '-60px' });
-  const isTimelineInView = useInView(timelineRef, { once: true, margin: '-40px' });
-  const isHighlightsInView = useInView(highlightsRef, { once: true, margin: '-40px' });
+  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleFeatureClick = (action: string) => {
+    if (action === 'advisor') {
+      toggleAdvisor();
+    } else if (action === 'calculator') {
+      const el = document.querySelector('#calculator');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      setPage('listing');
+    }
+  };
 
   return (
-    <section id="about" className="bg-navy section-luxury overflow-hidden">
-      {/* ── Header ── */}
-      <motion.div
-        ref={headerRef}
-        variants={staggerContainer}
-        initial="hidden"
-        animate={isHeaderInView ? 'visible' : 'hidden'}
-        className="mx-auto max-w-7xl px-6 md:px-12 lg:px-20 mb-16"
-      >
-        <motion.span
-          variants={fadeUp}
-          transition={{ duration: 0.5 }}
-          className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-gold mb-4"
-        >
-          Why Egypt
-        </motion.span>
-        <motion.h2
-          variants={fadeUp}
-          transition={{ duration: 0.5 }}
-          className="text-3xl md:text-5xl font-[family-name:var(--font-jakarta)] font-bold text-white"
-        >
-          A Market on the{' '}
-          <span className="text-gold-gradient">Rise</span>
-        </motion.h2>
-        <motion.p
-          variants={fadeUp}
-          transition={{ duration: 0.5 }}
-          className="mt-4 max-w-2xl text-white/50 text-lg font-[family-name:var(--font-inter)]"
-        >
-          Egypt's real estate market is undergoing a historic transformation.
-          Here's why the world's smartest investors are paying attention.
-        </motion.p>
-      </motion.div>
-
-      {/* ── Timeline ── */}
-      <motion.div
-        ref={timelineRef}
-        variants={staggerContainer}
-        initial="hidden"
-        animate={isTimelineInView ? 'visible' : 'hidden'}
-        className="mx-auto max-w-3xl px-6 md:px-12 lg:px-20 mb-20"
-      >
-        <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-[18px] md:left-1/2 md:-translate-x-px top-0 bottom-0 w-0.5 bg-gradient-to-b from-gold/60 via-gold/30 to-transparent" />
-
-          {WHY_INVEST_POINTS.map((point, i) => {
-            const isLeft = i % 2 === 0;
-            return (
-              <motion.div
-                key={point.year}
+    <div id="about" className="bg-[#FAF9F6] overflow-hidden">
+      {/* ── TOP SECTION: Handpicked Investment Opportunities ── */}
+      <section className="py-12 md:py-16 px-4 sm:px-6 md:px-12 lg:px-16">
+        <div className="max-w-[1400px] mx-auto">
+          {/* Header Row */}
+          <motion.div
+            ref={headerRef}
+            variants={staggerContainer}
+            initial="hidden"
+            animate={isHeaderInView ? 'visible' : 'hidden'}
+            className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4"
+          >
+            <div>
+              <motion.span
                 variants={fadeUp}
-                transition={{ duration: 0.6 }}
-                className={`relative flex items-start gap-6 md:gap-0 mb-12 last:mb-0 ${
-                  isLeft ? 'md:flex-row' : 'md:flex-row-reverse'
-                }`}
+                transition={{ duration: 0.4 }}
+                className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] text-[#C89B2B] font-[family-name:var(--font-inter)] mb-1"
               >
-                {/* Content card */}
-                <div
-                  className={`flex-1 md:w-1/2 ${
-                    isLeft ? 'md:pr-12 md:text-right' : 'md:pl-12 md:text-left'
-                  } pl-12 md:pl-0`}
-                >
-                  <span className="text-gold-gradient font-[family-name:var(--font-jakarta)] text-sm font-bold">
-                    {point.year}
-                  </span>
-                  <h3 className="mt-1 text-lg font-[family-name:var(--font-jakarta)] font-semibold text-white">
-                    {point.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-white/50 leading-relaxed font-[family-name:var(--font-inter)]">
-                    {point.description}
-                  </p>
-                </div>
+                FEATURED PROJECTS
+              </motion.span>
+              <motion.h2
+                variants={fadeUp}
+                transition={{ duration: 0.4 }}
+                className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 font-[family-name:var(--font-jakarta)] tracking-tight"
+              >
+                Handpicked Investment Opportunities
+              </motion.h2>
+              <motion.p
+                variants={fadeUp}
+                transition={{ duration: 0.4 }}
+                className="mt-1 text-slate-500 font-[family-name:var(--font-inter)] text-xs sm:text-sm"
+              >
+                Carefully selected projects with high ROI and growth potential
+              </motion.p>
+            </div>
 
-                {/* Center dot */}
-                <div className="absolute left-0 md:left-1/2 md:-translate-x-1/2 top-1">
-                  <div className="gold-glow flex h-9 w-9 items-center justify-center rounded-full border-2 border-gold/40 bg-navy">
-                    <div className="h-3 w-3 rounded-full bg-gold" />
+            {/* View All Projects Button */}
+            <motion.button
+              variants={fadeUp}
+              onClick={() => setPage('listing')}
+              className="px-5 py-2.5 rounded-full border border-[#C89B2B]/40 hover:border-[#C89B2B] text-[#C89B2B] hover:bg-[#C89B2B]/5 font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center gap-2 self-start sm:self-end cursor-pointer font-[family-name:var(--font-inter)]"
+            >
+              View All Projects
+              <ArrowRight className="w-4 h-4" />
+            </motion.button>
+          </motion.div>
+
+          {/* 4 Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+            {FEATURED_PROJECTS.map((proj, idx) => (
+              <motion.div
+                key={proj.id}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
+                whileHover={{ y: -5 }}
+                onClick={() => {
+                  selectProperty('prop-1');
+                  setPage('detail');
+                }}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200/60 cursor-pointer group flex flex-col"
+              >
+                {/* Top Image Section with Overlay Info */}
+                <div className="relative h-[220px] sm:h-[240px] overflow-hidden">
+                  <img
+                    src={proj.image}
+                    alt={proj.name}
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                  {/* Dark Gradient Overlay for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+                  {/* Badge top-left */}
+                  <span
+                    className={`absolute top-3 left-3 text-xs font-semibold px-3 py-1 rounded-full shadow-sm ${proj.badgeStyle}`}
+                  >
+                    {proj.badge}
+                  </span>
+
+                  {/* Glass Button top-right */}
+                  <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-xs">
+                    ⊹
+                  </div>
+
+                  {/* Content Overlaid at Bottom of Image */}
+                  <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between text-white">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold tracking-wider font-[family-name:var(--font-jakarta)] leading-tight text-white drop-shadow">
+                        {proj.name}
+                      </h3>
+                      <p className="text-xs text-white/80 font-[family-name:var(--font-inter)] mt-0.5">
+                        {proj.location}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] text-white/70 block font-[family-name:var(--font-inter)] leading-none mb-0.5">
+                        Starting from
+                      </span>
+                      <span className="text-sm font-extrabold text-white font-[family-name:var(--font-jakarta)]">
+                        {proj.startingPrice}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Spacer for the other side on desktop */}
-                <div className="hidden md:block md:w-1/2" />
-              </motion.div>
-            );
-          })}
-        </div>
-      </motion.div>
+                {/* Bottom White Spec Bar */}
+                <div className="p-3.5 px-4 bg-white flex items-center justify-between border-t border-slate-100 text-slate-600 text-xs font-[family-name:var(--font-inter)]">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <Bed className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{proj.bedrooms}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Maximize className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{proj.area}</span>
+                    </div>
+                  </div>
 
-      {/* ── Highlight cards ── */}
-      <motion.div
-        ref={highlightsRef}
-        variants={staggerContainer}
-        initial="hidden"
-        animate={isHighlightsInView ? 'visible' : 'hidden'}
-        className="mx-auto max-w-7xl px-6 md:px-12 lg:px-20"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {HIGHLIGHTS.map((h) => (
-            <motion.div
-              key={h.title}
-              variants={fadeUp}
-              transition={{ duration: 0.6 }}
-              className="group rounded-2xl p-6 bg-white/5 border border-white/10 hover:border-gold/30 hover:bg-white/[0.08] transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.05)]"
-            >
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gold/10 text-gold transition-colors group-hover:bg-gold/20">
-                <h.icon className="h-5 w-5" />
-              </div>
-              <h4 className="text-base font-[family-name:var(--font-jakarta)] font-semibold text-white">
-                {h.title}
-              </h4>
-              <p className="mt-2 text-sm text-white/40 leading-relaxed font-[family-name:var(--font-inter)]">
-                {h.desc}
-              </p>
-            </motion.div>
-          ))}
+                  <button
+                    onClick={(e) => toggleFavorite(proj.id, e)}
+                    aria-label="Add to favorites"
+                    className="text-slate-400 hover:text-rose-500 transition-colors p-1"
+                  >
+                    <Heart
+                      className={`w-4 h-4 ${
+                        favorites[proj.id] ? 'fill-rose-500 text-rose-500' : ''
+                      }`}
+                    />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Carousel Pagination Dots */}
+          <div className="flex items-center justify-center gap-2 mt-8">
+            {[0, 1, 2, 3, 4].map((dotIndex) => (
+              <button
+                key={dotIndex}
+                onClick={() => setActiveDot(dotIndex)}
+                aria-label={`Go to slide ${dotIndex + 1}`}
+                className={`transition-all duration-300 rounded-full cursor-pointer ${
+                  activeDot === dotIndex
+                    ? 'w-3.5 h-3.5 bg-[#C89B2B]'
+                    : 'w-2.5 h-2.5 bg-slate-300 hover:bg-slate-400'
+                }`}
+              />
+            ))}
+          </div>
         </div>
-      </motion.div>
-    </section>
+      </section>
+
+      {/* ── BOTTOM SECTION: Everything You Need in One Place ── */}
+      <section className="bg-[#0B132B] text-white py-14 md:py-20 px-4 sm:px-6 md:px-12 lg:px-16 border-t border-slate-800">
+        <div className="max-w-[1400px] mx-auto">
+          {/* Centered Heading */}
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-[family-name:var(--font-jakarta)] tracking-tight text-white">
+              Everything You Need in One Place
+            </h2>
+          </div>
+
+          {/* 6 Dark Glass Feature Cards Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4">
+            {PLATFORM_FEATURES.map((feat, idx) => {
+              const IconComponent = feat.icon;
+              return (
+                <motion.div
+                  key={feat.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: idx * 0.06 }}
+                  whileHover={{ y: -5, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
+                  onClick={() => handleFeatureClick(feat.action)}
+                  className="bg-white/5 backdrop-blur-md border border-white/10 hover:border-[#D4AF37]/50 rounded-2xl p-5 sm:p-6 text-center transition-all duration-300 cursor-pointer group flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px]"
+                >
+                  {/* Icon */}
+                  <div className="mb-3 text-[#D4AF37] group-hover:scale-110 transition-transform duration-300">
+                    <IconComponent className="w-7 h-7 sm:w-8 sm:h-8 stroke-[1.5]" />
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="font-bold text-sm sm:text-base font-[family-name:var(--font-jakarta)] text-white leading-snug group-hover:text-[#D4AF37] transition-colors">
+                    {feat.title}
+                  </h3>
+
+                  {/* Subtitle */}
+                  <p className="text-[11px] sm:text-xs text-slate-400 font-[family-name:var(--font-inter)] mt-1 line-clamp-2">
+                    {feat.subtitle}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

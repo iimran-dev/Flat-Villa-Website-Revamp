@@ -1,163 +1,137 @@
 'use client';
 
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { Apple, Smartphone } from 'lucide-react';
-
-const awards = [
-  '#1 Investment Platform',
-  '150+ Developer Partners',
-  '12 Excellence Awards',
-  '8+ Years of Experience',
-];
-
-const fadeUp = {
-  hidden: { y: 30, opacity: 0 },
-  visible: { y: 0, opacity: 1 },
-};
-
-const staggerContainer = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
-  },
-};
+import { motion } from 'framer-motion';
+import { Phone, Building2, Apple } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 export function AppCTA() {
-  const awardsRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLElement>(null);
-  const isAwardsInView = useInView(awardsRef, { once: true, margin: '-50px' });
-  const isCtaInView = useInView(ctaRef, { once: true, margin: '-80px' });
+  const { toggleAdvisor, setPage } = useAppStore();
 
   return (
-    <>
-      {/* ===== Awards Sub-section ===== */}
-      <div className="bg-navy py-16 px-6 md:px-12">
-        <motion.div
-          ref={awardsRef}
-          variants={staggerContainer}
-          initial="hidden"
-          animate={isAwardsInView ? 'visible' : 'hidden'}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto"
-        >
-          {awards.map((award, i) => (
-            <motion.div
-              key={i}
-              variants={fadeUp}
-              transition={{ duration: 0.6 }}
-              className="text-center"
-            >
-              <p className="text-3xl md:text-4xl font-[family-name:var(--font-jakarta)] font-bold text-gold-gradient">
-                {award.split(' ')[0]}
-              </p>
-              <p className="text-xs uppercase tracking-wider text-white/50 mt-2">
-                {award
-                  .split(' ')
-                  .slice(1)
-                  .join(' ')}
-              </p>
-            </motion.div>
-          ))}
-        </motion.div>
+    <section id="cta" className="relative overflow-hidden py-16 md:py-20 px-4 sm:px-6 md:px-12 lg:px-16 bg-[#0B132B]">
+      {/* Background Image with Dark Vignette Overlay */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40"
+        style={{ backgroundImage: 'url(/hero_bg.png)' }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0B132B] via-[#0B132B]/90 to-[#0B132B]" />
       </div>
 
-      {/* ===== App CTA Sub-section ===== */}
-      <section
-        ref={ctaRef}
-        className="bg-gradient-to-br from-[#0F172A] to-[#111827] section-luxury"
-      >
+      {/* Main Content Container */}
+      <div className="max-w-[1400px] mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        {/* Left Column: CTA Headline & Buttons */}
         <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate={isCtaInView ? 'visible' : 'hidden'}
-          className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl mx-auto px-6 md:px-12"
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="lg:col-span-5 flex flex-col justify-center"
         >
-          {/* Left column */}
-          <motion.div variants={fadeUp} transition={{ duration: 0.6 }} className="flex-1">
-            <h2 className="text-3xl md:text-4xl font-[family-name:var(--font-jakarta)] font-bold text-white">
-              Invest Smarter on the Go
-            </h2>
-            <p className="mt-4 text-white/60 font-[family-name:var(--font-inter)] max-w-md leading-relaxed">
-              Access your investment portfolio, receive AI-powered insights, and
-              explore exclusive properties — all from your pocket.
-            </p>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white font-[family-name:var(--font-jakarta)] leading-[1.2] tracking-tight">
+            Ready to Find Your Perfect Property?
+          </h2>
+          <p className="mt-2.5 text-slate-300 text-xs sm:text-sm font-[family-name:var(--font-inter)] leading-relaxed max-w-md">
+            Let our experts help you make the right investment decision for your future.
+          </p>
 
-            {/* Buttons */}
-            <div className="flex flex-wrap gap-4 mt-8">
-              <button className="glass-dark rounded-xl px-6 py-3 flex items-center gap-3 hover:border-gold/30 transition-colors duration-300">
-                <Apple className="w-5 h-5 text-white" />
-                <div className="text-left">
-                  <span className="block text-[10px] text-white/50 leading-none">
-                    Download on the
-                  </span>
-                  <span className="block text-sm font-semibold text-white leading-tight">
-                    App Store
-                  </span>
-                </div>
-              </button>
+          {/* Action Buttons */}
+          <div className="mt-6 flex flex-wrap items-center gap-3.5">
+            <button
+              onClick={() => toggleAdvisor()}
+              className="bg-[#C89B2B] hover:bg-[#b08722] text-white font-semibold rounded-2xl px-6 py-3 text-xs sm:text-sm flex items-center gap-2.5 shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer font-[family-name:var(--font-inter)]"
+            >
+              <Phone className="w-4 h-4 fill-white" />
+              Talk to Expert
+            </button>
 
-              <button className="glass-dark rounded-xl px-6 py-3 flex items-center gap-3 hover:border-gold/30 transition-colors duration-300">
-                <Smartphone className="w-5 h-5 text-white" />
-                <div className="text-left">
-                  <span className="block text-[10px] text-white/50 leading-none">
-                    Get it on
-                  </span>
-                  <span className="block text-sm font-semibold text-white leading-tight">
-                    Google Play
-                  </span>
-                </div>
-              </button>
+            <button
+              onClick={() => setPage('listing')}
+              className="border border-white/30 hover:border-white/60 bg-black/30 hover:bg-black/50 text-white font-semibold rounded-2xl px-6 py-3 text-xs sm:text-sm flex items-center gap-2.5 backdrop-blur-md transition-all duration-200 cursor-pointer font-[family-name:var(--font-inter)]"
+            >
+              <Building2 className="w-4 h-4 text-[#D4AF37]" />
+              Browse Projects
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Center Column: Phone Mockup */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.15 }}
+          className="lg:col-span-3 flex justify-center items-center py-2"
+        >
+          <div className="relative group flex items-center justify-center">
+            {/* Soft Ambient Gold Backlight Glow */}
+            <div className="absolute inset-0 bg-[#C89B2B]/20 rounded-full blur-2xl group-hover:bg-[#C89B2B]/35 transition-all duration-500" />
+            <img
+              src="/phone_mockup.png?v=4"
+              alt="Flat & Villa Mobile App Mockup"
+              loading="eager"
+              className="relative z-10 w-52 sm:w-64 md:w-72 lg:w-[290px] h-auto max-h-[340px] sm:max-h-[380px] md:max-h-[420px] lg:max-h-[450px] object-contain drop-shadow-[0_25px_50px_rgba(0,0,0,0.85)] contrast-[1.04] saturate-[1.04] transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+        </motion.div>
+
+        {/* Right Column: "Get the App" QR Code Card */}
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="lg:col-span-4 flex justify-start lg:justify-end"
+        >
+          <div className="bg-[#151C2C]/80 backdrop-blur-xl border border-white/15 rounded-3xl p-5 sm:p-6 shadow-2xl text-white flex items-center gap-4 sm:gap-5 max-w-md w-full">
+            {/* Left Realistic QR Code Image Box */}
+            <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white p-1.5 rounded-2xl shrink-0 flex items-center justify-center shadow-xl relative border border-white/30 group/qr hover:scale-105 transition-transform duration-300 overflow-hidden">
+              <img
+                src="/qr_code.png"
+                alt="Scan to download Flat & Villa App"
+                className="w-full h-full object-contain rounded-xl"
+              />
             </div>
-          </motion.div>
 
-          {/* Right column – phone mockup */}
-          <motion.div
-            variants={fadeUp}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            className="shrink-0"
-          >
-            <div className="relative">
-              <div className="rounded-[2.5rem] w-64 h-[500px] bg-gradient-to-b from-gold/20 to-navy-deep border-2 border-white/10 gold-glow shimmer flex flex-col overflow-hidden">
-                {/* Status bar mock */}
-                <div className="flex justify-between items-center px-6 pt-4 pb-2">
-                  <div className="w-10 h-1.5 rounded-full bg-white/20" />
-                  <div className="w-6 h-1.5 rounded-full bg-white/15" />
-                </div>
+            {/* Right Text & App Store Badges */}
+            <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold font-[family-name:var(--font-jakarta)] text-white leading-tight">
+                  Get the App
+                </h3>
+                <p className="text-xs text-slate-300 font-[family-name:var(--font-inter)] leading-snug mt-1">
+                  Scan to download <br />
+                  our mobile app
+                </p>
+              </div>
 
-                {/* Mini property card */}
-                <div className="mx-4 mt-3 rounded-2xl bg-white/10 border border-white/10 overflow-hidden">
-                  <div className="h-24 bg-gradient-to-br from-gold/30 to-gold/5" />
-                  <div className="p-3">
-                    <div className="w-3/4 h-2 rounded-full bg-white/30 mb-2" />
-                    <div className="w-1/2 h-2 rounded-full bg-white/15 mb-3" />
-                    <div className="flex justify-between">
-                      <div className="w-16 h-5 rounded-lg bg-gold/30" />
-                      <div className="w-12 h-5 rounded-lg bg-white/10" />
-                    </div>
+              {/* Side-by-Side App Store Buttons */}
+              <div className="mt-3 flex items-center gap-2">
+                {/* App Store Button */}
+                <button className="bg-black/90 hover:bg-black border border-white/20 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 transition-all text-white cursor-pointer hover:border-white/40">
+                  <Apple className="w-3.5 h-3.5 text-white shrink-0" />
+                  <div className="text-left leading-none">
+                    <span className="block text-[9px] font-bold font-[family-name:var(--font-jakarta)] text-white">
+                      App Store
+                    </span>
                   </div>
-                </div>
+                </button>
 
-                {/* Skeleton text lines */}
-                <div className="px-4 mt-4 space-y-3 flex-1">
-                  <div className="w-full h-2 rounded-full bg-white/10" />
-                  <div className="w-5/6 h-2 rounded-full bg-white/10" />
-                  <div className="w-3/4 h-2 rounded-full bg-white/10" />
-                  <div className="w-2/3 h-2 rounded-full bg-white/8" />
-                  <div className="w-4/5 h-2 rounded-full bg-white/8" />
-                </div>
-
-                {/* Bottom nav bar */}
-                <div className="mt-auto px-4 pb-6 pt-3">
-                  <div className="h-10 rounded-2xl bg-gold/40" />
-                </div>
+                {/* Google Play Button */}
+                <button className="bg-black/90 hover:bg-black border border-white/20 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 transition-all text-white cursor-pointer hover:border-white/40">
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 20.5v-17c0-.83.67-1.5 1.5-1.5.3 0 .58.09.82.25l13.5 8.5c.5.31.78.86.78 1.44 0 .58-.28 1.13-.78 1.44l-13.5 8.5c-.24.16-.52.25-.82.25-.83 0-1.5-.67-1.5-1.5z" fill="#C89B2B" />
+                  </svg>
+                  <div className="text-left leading-none">
+                    <span className="block text-[9px] font-bold font-[family-name:var(--font-jakarta)] text-white">
+                      Google Play
+                    </span>
+                  </div>
+                </button>
               </div>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

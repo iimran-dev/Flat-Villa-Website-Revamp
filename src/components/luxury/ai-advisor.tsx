@@ -1,235 +1,154 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Bot, User, Sparkles } from 'lucide-react';
+import { X, Send, Bot, Sparkles, User, Building2, ChevronRight } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 
-interface Message {
-  id: string;
-  role: 'user' | 'advisor';
-  text: string;
-}
-
-const INITIAL_MESSAGES: Message[] = [
-  {
-    id: 'm0',
-    role: 'advisor',
-    text: 'Welcome to AURUM AI Advisor. I can help you find the perfect investment based on your goals, budget, and risk appetite. What are you looking for?',
-  },
-];
-
-const SUGGESTIONS = [
-  'Best ROI under $500K',
-  'Low-risk family villa',
-  'New Capital opportunities',
-  'Rental income properties',
-];
-
 export function AIAdvisor() {
-  const { isAdvisorOpen, setAdvisorOpen } = useAppStore();
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+  const { isAdvisorOpen, toggleAdvisor, setPage, setSearchQuery } = useAppStore();
+  const [messages, setMessages] = useState([
+    {
+      sender: 'bot',
+      text: 'Hello! I am your AI Property Advisor for Egypt real estate. What kind of investment or villa are you looking for today?',
+    },
+  ]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isTyping]);
+  if (!isAdvisorOpen) return null;
 
-  // Lock body scroll when open
-  useEffect(() => {
-    if (isAdvisorOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isAdvisorOpen]);
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
 
-  function handleSend(text?: string) {
-    const userText = text || input.trim();
-    if (!userText) return;
-
-    const userMsg: Message = { id: `m-${Date.now()}`, role: 'user', text: userText };
-    setMessages((prev) => [...prev, userMsg]);
+    const userMsg = input.trim();
+    setMessages((prev) => [...prev, { sender: 'user', text: userMsg }]);
     setInput('');
-    setIsTyping(true);
 
-    // Simulated AI response
     setTimeout(() => {
-      const responses = [
-        'Based on your criteria, I recommend The Capital Gate in the New Administrative Capital. It offers 15.1% expected ROI with a low $480K entry point and 95/100 investment score. Would you like more details?',
-        'For optimal rental yield, consider GPX Tower Residence in New Cairo — 11.2% rental yield with strong demand index of 88. The area is rapidly developing with excellent infrastructure.',
-        'North Coast properties like The Riviera Residence offer exceptional appreciation potential at 15% with premium lifestyle amenities. The area shows 15% average ROI across 340+ projects.',
-        'I analyzed 2,000+ properties matching your profile. The top 3 are all in New Cairo and New Capital — these areas show the highest growth trajectories for 2025-2027.',
-      ];
-      const reply: Message = {
-        id: `m-${Date.now()}-r`,
-        role: 'advisor',
-        text: responses[Math.floor(Math.random() * responses.length)],
-      };
-      setMessages((prev) => [...prev, reply]);
-      setIsTyping(false);
-    }, 1500 + Math.random() * 1000);
-  }
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: 'bot',
+          text: `Great choice! I recommend exploring properties in New Cairo & North Coast matching "${userMsg}". Would you like me to filter available units?`,
+        },
+      ]);
+    }, 800);
+  };
+
+  const handleQuickOption = (option: string) => {
+    setSearchQuery(option);
+    setPage('listing');
+    toggleAdvisor();
+  };
 
   return (
     <AnimatePresence>
-      {isAdvisorOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-            onClick={() => setAdvisorOpen(false)}
-          />
+      <div className="fixed inset-0 z-50 flex justify-end">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => toggleAdvisor()}
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        />
 
-          {/* Panel */}
-          <motion.aside
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-[#0F172A] shadow-2xl"
-          >
-            {/* ── Header ── */}
-            <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-              <div className="flex items-center gap-3">
-                <div className="breathe flex h-10 w-10 items-center justify-center rounded-full bg-gold/15">
-                  <Bot className="h-5 w-5 text-gold" />
-                </div>
-                <div>
-                  <h3 className="font-[family-name:var(--font-jakarta)] text-base font-semibold text-white">
-                    AI Investment Advisor
-                  </h3>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="pulse-gold h-2 w-2 rounded-full bg-gold" />
-                    <span className="text-xs text-white/50 font-[family-name:var(--font-inter)]">Online</span>
-                  </div>
-                </div>
+        {/* Drawer Panel */}
+        <motion.div
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="relative w-full max-w-md bg-[#0F172A] border-l border-white/10 shadow-2xl flex flex-col justify-between h-full z-10 text-white"
+        >
+          {/* Header */}
+          <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-[#1E293B]/80 backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#C89B2B]/20 text-[#D4AF37] border border-[#D4AF37]/30">
+                <Bot className="w-5 h-5" />
               </div>
-              <button
-                onClick={() => setAdvisorOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/60 transition-colors hover:border-white/30 hover:text-white"
-                aria-label="Close advisor"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div>
+                <h3 className="font-bold text-base font-[family-name:var(--font-jakarta)] flex items-center gap-1.5">
+                  AI Property Advisor
+                  <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                </h3>
+                <p className="text-xs text-slate-400 font-[family-name:var(--font-inter)]">
+                  Online • 24/7 Smart Match
+                </p>
+              </div>
             </div>
 
-            {/* ── Messages ── */}
-            <div
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto scrollbar-luxury px-6 py-6"
+            <button
+              onClick={() => toggleAdvisor()}
+              className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
             >
-              <div className="flex flex-col gap-5">
-                {messages.map((msg) => (
-                  <motion.div
-                    key={msg.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35 }}
-                    className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
-                  >
-                    {/* Avatar */}
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                        msg.role === 'advisor'
-                          ? 'bg-gold/15'
-                          : 'bg-white/10'
-                      }`}
-                    >
-                      {msg.role === 'advisor' ? (
-                        <Bot className="h-4 w-4 text-gold" />
-                      ) : (
-                        <User className="h-4 w-4 text-white/70" />
-                      )}
-                    </div>
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-                    {/* Bubble */}
-                    <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed font-[family-name:var(--font-inter)] ${
-                        msg.role === 'advisor'
-                          ? 'glass-dark text-white/90 rounded-tl-md'
-                          : 'bg-gold/20 text-white rounded-tr-md'
-                      }`}
-                    >
-                      {msg.text}
-                    </div>
-                  </motion.div>
-                ))}
-
-                {/* Typing indicator */}
-                {isTyping && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex gap-3"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/15">
-                      <Bot className="h-4 w-4 text-gold" />
-                    </div>
-                    <div className="glass-dark rounded-2xl rounded-tl-md px-4 py-3">
-                      <div className="flex gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-gold/60 animate-bounce [animation-delay:0ms]" />
-                        <span className="h-2 w-2 rounded-full bg-gold/60 animate-bounce [animation-delay:150ms]" />
-                        <span className="h-2 w-2 rounded-full bg-gold/60 animate-bounce [animation-delay:300ms]" />
-                      </div>
-                    </div>
-                  </motion.div>
+          {/* Messages Body */}
+          <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-4 font-[family-name:var(--font-inter)] text-sm">
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {msg.sender === 'bot' && (
+                  <div className="w-8 h-8 rounded-full bg-[#C89B2B] flex items-center justify-center shrink-0 text-white font-bold text-xs">
+                    AI
+                  </div>
+                )}
+                <div
+                  className={`p-3.5 rounded-2xl max-w-[80%] text-xs sm:text-sm leading-relaxed ${
+                    msg.sender === 'user'
+                      ? 'bg-[#C89B2B] text-white rounded-br-none'
+                      : 'bg-white/10 border border-white/10 text-slate-200 rounded-bl-none'
+                  }`}
+                >
+                  {msg.text}
+                </div>
+                {msg.sender === 'user' && (
+                  <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0 text-white font-bold text-xs">
+                    <User className="w-4 h-4" />
+                  </div>
                 )}
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* ── Suggestion chips ── */}
-            {messages.length <= 2 && (
-              <div className="flex flex-wrap gap-2 px-6 pb-3">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => handleSend(s)}
-                    className="rounded-full border border-gold/25 bg-gold/5 px-3.5 py-1.5 text-xs font-[family-name:var(--font-inter)] text-gold transition-colors hover:bg-gold/15"
-                  >
-                    <Sparkles className="mr-1.5 inline h-3 w-3" />
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* Quick Suggestions */}
+          <div className="p-3 px-4 border-t border-white/10 bg-[#1E293B]/40 flex flex-wrap gap-2">
+            {['Sea View Villas', 'New Cairo', 'High ROI Projects'].map((tag) => (
+              <button
+                key={tag}
+                onClick={() => handleQuickOption(tag)}
+                className="bg-white/10 hover:bg-[#C89B2B] text-slate-200 hover:text-white border border-white/10 rounded-full px-3 py-1 text-xs font-medium transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <Building2 className="w-3 h-3 text-[#D4AF37]" />
+                <span>{tag}</span>
+              </button>
+            ))}
+          </div>
 
-            {/* ── Input ── */}
-            <div className="border-t border-white/10 px-6 py-4">
-              <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask about properties, ROI, locations..."
-                  className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 font-[family-name:var(--font-inter)] focus:border-gold/40 focus:outline-none transition-colors"
-                />
-                <button
-                  onClick={() => handleSend()}
-                  disabled={!input.trim()}
-                  className="btn-luxury flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold text-navy transition-all hover:bg-gold-light disabled:opacity-40 disabled:cursor-not-allowed"
-                  aria-label="Send message"
-                >
-                  <Send className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </motion.aside>
-        </>
-      )}
+          {/* Input Form */}
+          <form onSubmit={handleSend} className="p-4 border-t border-white/10 bg-[#1E293B]/80 flex items-center gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about budget, location..."
+              className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-[#C89B2B]"
+            />
+            <button
+              type="submit"
+              className="p-2.5 rounded-xl bg-[#C89B2B] hover:bg-[#b08722] text-white transition-all shadow-md cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        </motion.div>
+      </div>
     </AnimatePresence>
   );
 }

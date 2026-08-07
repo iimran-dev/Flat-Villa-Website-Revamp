@@ -1,125 +1,55 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { STATISTICS } from '@/lib/data';
+import { Building2, Landmark, Trophy, Users } from 'lucide-react';
 
-function easeOutExpo(t: number): number {
-  return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-}
-
-function useCountUp(end: number, isInView: boolean, formatAsK = false) {
-  const [display, setDisplay] = useState(0);
-
-  const animate = useCallback(() => {
-    const duration = 2000;
-    const startTime = performance.now();
-
-    function step(currentTime: number) {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeOutExpo(progress);
-      const current = Math.round(easedProgress * end);
-      setDisplay(current);
-
-      if (progress < 1) {
-        requestAnimationFrame(step);
-      }
-    }
-
-    requestAnimationFrame(step);
-  }, [end]);
-
-  useEffect(() => {
-    if (isInView) {
-      animate();
-    }
-  }, [isInView, animate]);
-
-  if (formatAsK && display >= 1000) {
-    return `${Math.round(display / 1000)}K`;
-  }
-  return display.toLocaleString();
-}
-
-const fadeUp = {
-  hidden: { y: 30, opacity: 0 },
-  visible: { y: 0, opacity: 1 },
-};
-
-const staggerContainer = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-function StatCard({
-  value,
-  suffix,
-  label,
-  isInView,
-  formatAsK,
-}: {
-  value: number;
-  suffix: string;
-  label: string;
-  isInView: boolean;
-  formatAsK?: boolean;
-}) {
-  const displayValue = useCountUp(value, isInView, formatAsK);
-
-  return (
-    <div className="luxury-card p-6 md:p-8 text-center">
-      <div className="flex items-baseline justify-center gap-1">
-        <span className="text-4xl md:text-5xl font-bold text-navy font-[family-name:var(--font-jakarta)]">
-          {displayValue}
-        </span>
-        {suffix && (
-          <span className="text-2xl text-gold font-[family-name:var(--font-jakarta)]">
-            {suffix}
-          </span>
-        )}
-      </div>
-      <p className="mt-2 text-sm text-muted-foreground uppercase tracking-wider">
-        {label}
-      </p>
-    </div>
-  );
-}
+const STATS_ITEMS = [
+  { icon: Landmark, value: 'EGP 45B+', label: 'Property Transactions' },
+  { icon: Building2, value: '150+', label: 'Top Developers' },
+  { icon: Trophy, value: '98.6%', label: 'Satisfied Investors' },
+  { icon: Users, value: '10,000+', label: 'Active Clients' },
+];
 
 export function Stats() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
 
   return (
-    <section className="bg-white section-luxury">
-      <motion.div
-        ref={ref}
-        variants={staggerContainer}
-        initial="hidden"
-        animate={isInView ? 'visible' : 'hidden'}
-        className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto px-6"
-      >
-        {STATISTICS.map((stat) => (
-          <motion.div
-            key={stat.label}
-            variants={fadeUp}
-            transition={{ duration: 0.6 }}
-          >
-            <StatCard
-              value={stat.value}
-              suffix={stat.suffix}
-              label={stat.label}
-              isInView={isInView}
-              formatAsK={'format' in stat && stat.format}
-            />
-          </motion.div>
-        ))}
-      </motion.div>
+    <section ref={ref} className="bg-slate-900 text-white py-12 md:py-16 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 lg:px-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8"
+        >
+          {STATS_ITEMS.map((stat, idx) => {
+            const IconComp = stat.icon;
+            return (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="flex items-center gap-4 bg-slate-800/60 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-slate-700/50 hover:border-[#D4AF37]/50 transition-all duration-300 group"
+              >
+                <div className="p-3 rounded-xl bg-[#C89B2B]/20 text-[#D4AF37] border border-[#D4AF37]/30 shrink-0 group-hover:scale-110 transition-transform">
+                  <IconComp className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-lg sm:text-2xl font-bold font-[family-name:var(--font-jakarta)] text-white group-hover:text-[#D4AF37] transition-colors">
+                    {stat.value}
+                  </div>
+                  <div className="text-xs text-slate-400 font-[family-name:var(--font-inter)] mt-0.5">
+                    {stat.label}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      </div>
     </section>
   );
 }
